@@ -18,6 +18,21 @@ void *malloc_int(int value)
     return tmp;
 }
 
+// return TRUE if match
+bool LinkedList_data_matches(void *data, void *other_data)
+{
+    return memcmp(data, other_data, sizeof(*data)) == 0;
+}
+int LinkedList_length(LinkedList_node_t **head)
+{
+    LinkedList_node_t *tmp = *head;
+
+    int i = 0;
+    for (; tmp != NULL; i++)
+        tmp = tmp->next;
+
+    return i;
+}
 LinkedList_node_t *LinkedList_malloc_node(void *data)
 {
     LinkedList_node_t *tmp = malloc(sizeof(LinkedList_node_t));
@@ -27,6 +42,8 @@ LinkedList_node_t *LinkedList_malloc_node(void *data)
     tmp->next = NULL;
     return tmp;
 }
+
+
 LinkedList_node_t *LinkedList_prepend(LinkedList_node_t **head, void *data)
 {
     LinkedList_node_t *tmp = LinkedList_malloc_node(data);
@@ -54,7 +71,7 @@ LinkedList_node_t *LinkedList_insert_after(LinkedList_node_t **head, void *data,
     LinkedList_node_t *tmp = *head;
     while (tmp != NULL)
     {
-        if (tmp->data == after_data)
+        if (LinkedList_data_matches(tmp->data, after_data))
         {
             LinkedList_node_t *new_node = LinkedList_malloc_node(data);
             if (!new_node)
@@ -70,13 +87,16 @@ LinkedList_node_t *LinkedList_insert_after(LinkedList_node_t **head, void *data,
 }
 LinkedList_node_t *LinkedList_insert_before(LinkedList_node_t **head, void *data, void *before_data)
 {
-    if (*head == NULL || (*head)->data == before_data)
+    if (*head == NULL)
+        return NULL;
+
+    if (LinkedList_data_matches((*head)->data, before_data))
         return LinkedList_prepend(head, data);
 
     LinkedList_node_t *tmp = *head;
     while (tmp->next != NULL)
     {
-        if (tmp->next->data == before_data)
+        if (LinkedList_data_matches(tmp->next->data, before_data))
         {
             LinkedList_node_t *new_node = LinkedList_malloc_node(data);
             if (!new_node)
@@ -92,22 +112,17 @@ LinkedList_node_t *LinkedList_insert_before(LinkedList_node_t **head, void *data
 }
 LinkedList_node_t *LinkedList_insert(LinkedList_node_t **head, void *data, int index)
 {
+    int length = LinkedList_length(head);
+    if (index < 0)
+        index += length - 1;
+
+    if (index < 0 || index >= length)
+        return NULL;
+
     if (index == 0)
         return LinkedList_prepend(head, data);
 
     LinkedList_node_t *tmp = *head;
-    if (index < 0)
-    {
-        int length = 0;
-        while (tmp != NULL)
-        {
-            length++;
-            tmp = tmp->next;
-        }
-        index += length;
-    }
-
-    tmp = *head;
     for (int i = 0; i < index - 1 && tmp != NULL; i++)
         tmp = tmp->next;
 
@@ -123,35 +138,114 @@ LinkedList_node_t *LinkedList_insert(LinkedList_node_t **head, void *data, int i
     return tmp->next;
 }
 
-int main()
+
+LinkedList_node_t *LinkedList_get(LinkedList_node_t **head, int index)
 {
-    int *data = malloc(sizeof(int));
-    *data = 1;
+    int length = LinkedList_length(head);
+    if (index < 0)
+        index += length - 1;
 
-    LinkedList_node_t *head = NULL;
-    LinkedList_node_t *tmp = NULL;
+    if (index < 0 || index >= length)
+        return NULL;
 
-    LinkedList_append(&head, malloc_int(-111));
-    LinkedList_append(&head, malloc_int(-222));
-    LinkedList_node_t *before = LinkedList_prepend(&head, malloc_int(-12));
-    LinkedList_prepend(&head, malloc_int(-36));
-    LinkedList_append(&head, malloc_int(-73));
+    LinkedList_node_t *tmp = *head;
+    for (int i = 0; i < index && tmp != NULL; i++)
+        tmp = tmp->next;
 
-    for (int i = 0; i < 5; i++)
+    return tmp;
+}
+// return -1 if not found
+int LinkedList_get_index(LinkedList_node_t **head, void *data)
+{
+    LinkedList_node_t *tmp = *head;
+    for (int i = 0; tmp != NULL; i++)
     {
-        tmp = LinkedList_insert_before(&head, malloc_int(i + 1), before->data);
-        // printf("\ntmp: %d", *(int *)tmp->data);
-    }
-    LinkedList_insert(&head, malloc_int(-2), -2);
-    LinkedList_insert(&head, malloc_int(-3), -3);
-    LinkedList_insert(&head, malloc_int(22), 2);
-    LinkedList_insert(&head, malloc_int(33), 3);
-    tmp = head;
-    while (tmp != NULL)
-    {
-        printf("\ntmp: %d", *(int *)tmp->data);
+        if (LinkedList_data_matches(tmp->data, data))
+            return i;
         tmp = tmp->next;
     }
 
-    printf("\n\n");
+    return -1;
+}
+
+LinkedList_node_t *LinkedList_get_after(LinkedList_node_t **head, void *data)
+{
+    LinkedList_node_t *tmp = *head;
+    while (tmp != NULL)
+    {
+        if (LinkedList_data_matches(tmp->data, data))
+            return tmp->next;
+        tmp = tmp->next;
+    }
+
+    return NULL;
+}
+LinkedList_node_t *LinkedList_get_before(LinkedList_node_t **head, void *data)
+{
+    if (*head == NULL)
+        return NULL;
+
+    LinkedList_node_t *tmp = *head;
+    while (tmp->next != NULL)
+    {
+        if (LinkedList_data_matches(tmp->next->data, data))
+            return tmp;
+        tmp = tmp->next;
+    }
+
+    return NULL;
+}
+LinkedList_node_t *LinkedList_get_tail(LinkedList_node_t **head)
+{
+    if (*head == NULL)
+        return NULL;
+
+    LinkedList_node_t *tmp = *head;
+    while (tmp->next != NULL)
+        tmp = tmp->next;
+
+    return tmp;
+}
+
+LinkedList_node_t *LinkedList_delete_list(LinkedList_node_t **head)
+{
+    LinkedList_node_t *tmp = *head;
+    while (tmp != NULL)
+    {
+        tmp = tmp->next;
+        free(*head);
+        *head = tmp;
+    }
+
+    return NULL;
+}
+
+void *LinkedList_pop_head(LinkedList_node_t **head)
+{
+    if (*head == NULL)
+        return NULL;
+
+    LinkedList_node_t *tmp = *head;
+    *head = (*head)->next;
+    void *retrieve = tmp->data;
+    free(tmp);
+    return retrieve;
+}
+void *LinkedList_pop_tail(LinkedList_node_t **head)
+{
+    if (*head == NULL)
+        return NULL;
+
+    LinkedList_node_t *tmp = *head;
+    while (tmp->next != NULL)
+        tmp = tmp->next;
+        
+    void *retrieve = tmp->data;
+    free(tmp);
+    return retrieve;
+}
+
+
+int main()
+{
 }
