@@ -1,16 +1,5 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
+#include "linked_list.h"
 
-typedef struct LinkedList_node
-{
-    void *data;
-    struct LinkedList_node *next;
-} LinkedList_node_t;
-
-
-// return TRUE if match
 bool LinkedList_data_matches(void *data, void *other_data)
 {
     return memcmp(data, other_data, sizeof(*data)) == 0;
@@ -161,7 +150,6 @@ LinkedList_node_t *LinkedList_get(LinkedList_node_t **head, int index)
 
     return tmp;
 }
-// return -1 if not found
 int LinkedList_get_index(LinkedList_node_t **head, void *data)
 {
     if (!head || !*head)
@@ -456,4 +444,3 @@ void LinkedList_delete_index(LinkedList_node_t **head, int index)
     free(delete->data);
     free(delete);
 }
-
