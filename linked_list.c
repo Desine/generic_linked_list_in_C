@@ -9,14 +9,6 @@ typedef struct LinkedList_node
     struct LinkedList_node *next;
 } LinkedList_node_t;
 
-void *malloc_int(int value)
-{
-    int *tmp = malloc(sizeof(int));
-    if (tmp == NULL)
-        return NULL;
-    *tmp = value;
-    return tmp;
-}
 
 // return TRUE if match
 bool LinkedList_data_matches(void *data, void *other_data)
@@ -270,13 +262,9 @@ void *LinkedList_pop_tail(LinkedList_node_t **head)
 
     void *retrieve = tmp->data;
     if (prev)
-    {
         prev->next = NULL;
-    }
     else
-    {
         *head = NULL;
-    }
 
     free(tmp);
     return retrieve;
@@ -389,13 +377,9 @@ void LinkedList_delete_node(LinkedList_node_t **head, void *data)
         if (LinkedList_data_matches(tmp->data, data))
         {
             if (prev)
-            {
                 prev->next = tmp->next;
-            }
             else
-            {
                 *head = tmp->next;
-            }
             free(tmp->data);
             free(tmp);
             return;
