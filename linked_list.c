@@ -1,8 +1,14 @@
 #include "linked_list.h"
 
+size_t LinkedList_data_size;
+
 bool LinkedList_data_matches(void *data, void *other_data)
 {
-    return memcmp(data, other_data, sizeof(*data)) == 0;
+    if(!LinkedList_data_size){
+        printf("FAIL. set LinkedList_data_size to size of your data");
+        return false;
+    }
+    return memcmp(data, other_data, LinkedList_data_size) == 0;
 }
 int LinkedList_length(LinkedList_node_t **head)
 {
@@ -132,7 +138,7 @@ LinkedList_node_t *LinkedList_insert(LinkedList_node_t **head, void *data, int i
     return tmp->next;
 }
 
-LinkedList_node_t *LinkedList_get(LinkedList_node_t **head, int index)
+LinkedList_node_t *LinkedList_get_by_index(LinkedList_node_t **head, int index)
 {
     if (!head || !*head)
         return NULL;
@@ -205,22 +211,6 @@ LinkedList_node_t *LinkedList_get_tail(LinkedList_node_t **head)
         tmp = tmp->next;
 
     return tmp;
-}
-
-LinkedList_node_t *LinkedList_delete_list(LinkedList_node_t **head)
-{
-    if (!head || !*head)
-        return NULL;
-
-    LinkedList_node_t *tmp;
-    while (*head)
-    {
-        tmp = *head;
-        *head = (*head)->next;
-        free(tmp->data);
-        free(tmp);
-    }
-    return NULL;
 }
 
 void *LinkedList_pop_head(LinkedList_node_t **head)
@@ -342,7 +332,48 @@ void *LinkedList_pop_index(LinkedList_node_t **head, int index)
 
     return retrieve;
 }
+void *LinkedList_pop_data(LinkedList_node_t **head, void *data)
+{
+    if (!head || !*head)
+        return NULL;
 
+    LinkedList_node_t *tmp = *head;
+    LinkedList_node_t *prev = NULL;
+    while (tmp)
+    {
+        if (LinkedList_data_matches(tmp->data, data))
+        {
+            if (prev)
+                prev->next = tmp->next;
+            else
+                *head = tmp->next;
+            void *retrieve = tmp->data;
+            free(tmp);
+            return retrieve;
+        }
+        prev = tmp;
+        tmp = tmp->next;
+    }
+
+    return NULL;
+}
+
+
+LinkedList_node_t *LinkedList_delete_list(LinkedList_node_t **head)
+{
+    if (!head || !*head)
+        return NULL;
+
+    LinkedList_node_t *tmp;
+    while (*head)
+    {
+        tmp = *head;
+        *head = (*head)->next;
+        free(tmp->data);
+        free(tmp);
+    }
+    return NULL;
+}
 void LinkedList_delete_head(LinkedList_node_t **head)
 {
     if (!head || !*head)
@@ -353,7 +384,7 @@ void LinkedList_delete_head(LinkedList_node_t **head)
     free(delete->data);
     free(delete);
 }
-void LinkedList_delete_node(LinkedList_node_t **head, void *data)
+void LinkedList_delete_by_data(LinkedList_node_t **head, void *data)
 {
     if (!head || !*head)
         return;
